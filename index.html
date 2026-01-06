@@ -1,85 +1,188 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>TaskCoin Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskCoin</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+    }
+
+    .box {
+      width: 320px;
+      background: #0f172a;
+      padding: 30px 25px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 5px;
+      color: #38bdf8;
+    }
+
+    .sub {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .signup {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+    }
+
+    .login {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      color: #fff;
+    }
+
+    .google {
+      background: #fff;
+      color: #000;
+      margin-top: 14px;
+    }
+
+    .btn:hover {
+      transform: scale(1.03);
+      opacity: 0.9;
+    }
+
+    #msg {
+      margin-top: 15px;
+      font-size: 13px;
+      color: #facc15;
+    }
+  </style>
 </head>
 
-<body style="font-family:Arial; text-align:center; margin-top:60px;">
+<body>
 
-  <h2>TaskCoin Login</h2>
+  <div class="box">
+    <h2>TaskCoin</h2>
+    <div class="sub">Earn coins by completing tasks</div>
 
-  <input type="email" id="email" placeholder="Email" style="padding:10px;width:250px;"><br><br>
-  <input type="password" id="password" placeholder="Password" style="padding:10px;width:250px;"><br><br>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
 
-  <button onclick="signup()">Sign Up</button>
-  <button onclick="login()">Login</button>
-  <br><br>
-  <button onclick="loginGoogle()">Login with Google</button>
+    <button class="btn signup" onclick="signup()">Create Account</button>
+    <button class="btn login" onclick="login()">Login</button>
 
-  <p id="msg"></p>
+    <button class="btn google" onclick="googleLogin()">Continue with Google</button>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <div id="msg"></div>
+  </div>
 
-  <script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyD5pHFDyLgn1Gd2h0MdGMfLv9VM_kQ3bsw",
       authDomain: "taskcoin-2be79.firebaseapp.com",
       projectId: "taskcoin-2be79",
+      storageBucket: "taskcoin-2be79.appspot.com",
+      messagingSenderId: "103144012500",
       appId: "1:103144012500:web:c6a01af9fac3af107b5941"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // Signup
-    function signup() {
-      auth.createUserWithEmailAndPassword(email.value, password.value)
-        .then(userCred => {
-          const user = userCred.user;
-          // welcome bonus 10 coin
-          db.collection("users").doc(user.uid).set({
-            email: user.email,
+    window.signup = async function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = res.user.uid;
+
+        await setDoc(doc(db, "users", uid), {
+          email: email,
+          coins: 10
+        });
+
+        document.getElementById("msg").innerText = "Signup successful 🎉 Welcome bonus: 10 coins";
+      } catch (e) {
+        document.getElementById("msg").innerText = e.message;
+      }
+    };
+
+    window.login = async function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await signInWithEmailAndPassword(auth, email, password);
+        const uid = res.user.uid;
+
+        const snap = await getDoc(doc(db, "users", uid));
+        const coins = snap.exists() ? snap.data().coins : 0;
+
+        document.getElementById("msg").innerText = "Login successful 💰 Coins: " + coins;
+      } catch (e) {
+        document.getElementById("msg").innerText = e.message;
+      }
+    };
+
+    window.googleLogin = async function () {
+      const provider = new GoogleAuthProvider();
+
+      try {
+        const res = await signInWithPopup(auth, provider);
+        const uid = res.user.uid;
+        const ref = doc(db, "users", uid);
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) {
+          await setDoc(ref, {
+            email: res.user.email,
             coins: 10
           });
-          window.location.href = "dashboard.html";
-        })
-        .catch(e => msg.innerText = e.message);
-    }
+        }
 
-    // Login
-    function login() {
-      auth.signInWithEmailAndPassword(email.value, password.value)
-        .then(() => {
-          window.location.href = "dashboard.html";
-        })
-        .catch(e => msg.innerText = e.message);
-    }
-
-    // Google Login
-    function loginGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(result => {
-          const user = result.user;
-          const ref = db.collection("users").doc(user.uid);
-          ref.get().then(doc => {
-            if (!doc.exists) {
-              ref.set({
-                email: user.email,
-                coins: 10
-              });
-            }
-            window.location.href = "dashboard.html";
-          });
-        })
-        .catch(e => msg.innerText = e.message);
-    }
+        document.getElementById("msg").innerText = "Google login successful 🎉";
+      } catch (e) {
+        document.getElementById("msg").innerText = e.message;
+      }
+    };
   </script>
 
 </body>
