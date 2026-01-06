@@ -1,54 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>TaskCoin - Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
+
+<body style="font-family:Arial; text-align:center; margin-top:60px;">
 
   <h2>TaskCoin Login</h2>
 
-  <input type="email" id="email" placeholder="Email"><br><br>
-  <input type="password" id="password" placeholder="Password"><br><br>
+  <input type="email" id="email" placeholder="Email" style="padding:10px;width:250px;"><br><br>
+  <input type="password" id="password" placeholder="Password" style="padding:10px;width:250px;"><br><br>
 
-  <button onclick="signup()">Sign Up</button>
-  <button onclick="login()">Login</button>
+  <button onclick="signup()" style="padding:10px 20px;">Sign Up</button>
+  <button onclick="login()" style="padding:10px 20px;">Login</button>
 
   <br><br>
-  <button onclick="loginGoogle()">Login with Google</button>
 
-  <p id="msg"></p>
+  <button onclick="loginGoogle()" style="padding:10px 20px;">
+    Login with Google
+  </button>
 
-  <!-- Firebase -->
+  <p id="msg" style="color:red;"></p>
+
+  <!-- Firebase SDK (COMPAT VERSION) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <script>
+    // 🔐 Firebase Configuration (YOUR PROJECT)
     const firebaseConfig = {
-      apiKey: "PASTE_API_KEY",
-      authDomain: "PASTE_AUTH_DOMAIN",
-      projectId: "PASTE_PROJECT_ID",
-      appId: "PASTE_APP_ID"
+      apiKey: "AIzaSyD5pHFDyLgn1Gd2h0MdGMfLv9VM_kQ3bsw",
+      authDomain: "taskcoin-2be79.firebaseapp.com",
+      projectId: "taskcoin-2be79",
+      appId: "1:103144012500:web:c6a01af9fac3af107b5941"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
+    // Email Signup
     function signup() {
       auth.createUserWithEmailAndPassword(email.value, password.value)
-        .then(() => msg.innerText = "Signup successful")
+        .then(() => {
+          msg.innerText = "Signup successful";
+          msg.style.color = "green";
+        })
         .catch(e => msg.innerText = e.message);
     }
 
+    // Email Login
     function login() {
       auth.signInWithEmailAndPassword(email.value, password.value)
-        .then(() => msg.innerText = "Login successful")
+        .then(() => {
+          msg.innerText = "Login successful";
+          msg.style.color = "green";
+        })
         .catch(e => msg.innerText = e.message);
     }
 
+    // Google Login
     function loginGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
-        .then(() => msg.innerText = "Google login successful")
+        .then(() => {
+          msg.innerText = "Google login successful";
+          msg.style.color = "green";
+        })
         .catch(e => msg.innerText = e.message);
     }
   </script>
