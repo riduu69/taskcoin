@@ -1,84 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>TaskCoin Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8" />
+  <title>TaskCoin – Earn Coins</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    body { font-family: Arial; background:#f4f6f8; margin:0; }
-    .header { background:#111; color:#fff; padding:15px; text-align:center; }
-    .task { background:#fff; margin:15px; padding:15px; border-radius:8px; }
-    button {
-      background:#000;
-      color:#fff;
-      border:none;
-      padding:8px 14px;
-      border-radius:5px;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+    }
+
+    header {
+      background: #111;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .container {
+      padding: 15px;
+    }
+
+    .task {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .task h3 {
+      margin: 0 0 5px 0;
+    }
+
+    .task p {
+      margin: 0 0 10px 0;
+      color: #555;
+    }
+
+    .task button {
+      padding: 10px 14px;
+      background: #229ED9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
     }
   </style>
 </head>
 
 <body>
 
-<div class="header">TaskCoin – Earn Coins</div>
-<div id="tasks"></div>
+<header>
+  TaskCoin – Earn Coins
+</header>
 
-<script>
-  // 🔹 Firebase config আগের মতোই থাকবে
-  firebase.initializeApp(firebaseConfig);
+<div class="container" id="tasks">
+  Loading tasks...
+</div>
 
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  auth.onAuthStateChanged(user => {
-    if (!user) {
-      window.location.href = "index.html";
-    } else {
-      loadTasks(user.uid);
+  // 🔥 Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyD5pHFDyLgn1Gd2h0MdGMfLv9VM_kQ3bsw",
+    authDomain: "taskcoin-2be79.firebaseapp.com",
+    projectId: "taskcoin-2be79"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const tasksDiv = document.getElementById("tasks");
+
+  async function loadTasks() {
+    tasksDiv.innerHTML = "";
+
+    const snap = await getDocs(collection(db, "tasks"));
+
+    if (snap.empty) {
+      tasksDiv.innerHTML = "No tasks available";
+      return;
     }
-  });
 
-  function loadTasks(userId) {
-    db.collection("tasks")
-      .where("status", "==", "active")
-      .get()
-      .then(snapshot => {
-        const box = document.getElementById("tasks");
-        box.innerHTML = "";
+    snap.forEach(doc => {
+      const t = doc.data();
+      if (t.status !== "active") return;
 
-        snapshot.forEach(doc => {
-          const t = doc.data();
-          box.innerHTML += `
-            <div class="task">
-              <h3>${t.title}</h3>
-              <p>Reward: ${t.reward} coins</p>
-              <button onclick="submitTask('${doc.id}', ${t.reward})">
-                Complete Task
-              </button>
-            </div>
-          `;
+      const box = document.createElement("div");
+      box.className = "task";
+
+      box.innerHTML = `
+        <h3>${t.title}</h3>
+        <p>Reward: ${t.reward} coins</p>
+        <button>Join Telegram</button>
+      `;
+
+      box.querySelector("button").onclick = async () => {
+        // 🔗 Telegram open
+        window.open(t.link, "_blank");
+
+        // ⏳ Pending task save
+        await addDoc(collection(db, "pendingTasks"), {
+          taskId: doc.id,
+          reward: t.reward,
+          status: "pending",
+          createdAt: Date.now()
         });
-      });
-  }
 
-  function submitTask(taskId, reward) {
-    const user = auth.currentUser;
-    if (!user) return;
+        alert("Task submitted. Waiting for admin approval.");
+      };
 
-    db.collection("pendingTasks").add({
-      userId: user.uid,
-      taskId: taskId,
-      reward: reward,
-      status: "pending",
-      time: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      alert("Task submitted! Waiting for admin approval.");
+      tasksDiv.appendChild(box);
     });
   }
+
+  loadTasks();
 </script>
 
 </body>
