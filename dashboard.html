@@ -9,13 +9,14 @@
 <body style="font-family:Arial; text-align:center; margin-top:60px;">
 
   <h2>Welcome to TaskCoin</h2>
-  <p id="email"></p>
+
+  <p id="email">Loading...</p>
   <h3>🪙 Coins: <span id="coins">0</span></h3>
 
   <br>
   <button onclick="logout()">Logout</button>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -29,18 +30,34 @@
     };
 
     firebase.initializeApp(firebaseConfig);
+
     const auth = firebase.auth();
     const db = firebase.firestore();
 
     auth.onAuthStateChanged(user => {
       if (!user) {
         window.location.href = "index.html";
-      } else {
-        email.innerText = "Email: " + user.email;
-        db.collection("users").doc(user.uid).get().then(doc => {
-          coins.innerText = doc.data().coins;
-        });
+        return;
       }
+
+      document.getElementById("email").innerText = "Email: " + user.email;
+
+      const ref = db.collection("users").doc(user.uid);
+
+      ref.get().then(doc => {
+        if (!doc.exists) {
+          // FIRST TIME USER → GIVE WELCOME BONUS
+          ref.set({
+            email: user.email,
+            coins: 10
+          });
+          document.getElementById("coins").innerText = 10;
+        } else {
+          // EXISTING USER
+          const data = doc.data();
+          document.getElementById("coins").innerText = data.coins ?? 10;
+        }
+      });
     });
 
     function logout() {
