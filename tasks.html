@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TaskCoin • Earn</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      background:linear-gradient(135deg,#020617,#0f172a,#020617);
+      font-family:'Segoe UI',sans-serif;
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+
+    .container{
+      width:360px;
+      background:#020617;
+      border-radius:18px;
+      padding:20px;
+      box-shadow:0 25px 60px rgba(0,0,0,.6);
+    }
+
+    .top{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    .top h2{
+      margin:0;
+      color:#38bdf8;
+    }
+
+    .top p{
+      margin:6px 0 0;
+      font-size:13px;
+      color:#94a3b8;
+    }
+
+    .task{
+      background:linear-gradient(135deg,#0f172a,#020617);
+      border:1px solid #1e293b;
+      border-radius:14px;
+      padding:14px;
+      margin-top:14px;
+      position:relative;
+    }
+
+    .task span{
+      font-size:12px;
+      color:#22c55e;
+      position:absolute;
+      top:10px;
+      right:12px;
+    }
+
+    .task h4{
+      margin:0 0 6px;
+      font-size:15px;
+    }
+
+    .task p{
+      margin:0;
+      font-size:13px;
+      color:#cbd5f5;
+    }
+
+    .task a{
+      display:inline-block;
+      margin-top:8px;
+      font-size:13px;
+      color:#38bdf8;
+      text-decoration:none;
+    }
+
+    .task button{
+      margin-top:12px;
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:12px;
+      font-weight:bold;
+      font-size:14px;
+      cursor:pointer;
+      background:linear-gradient(135deg,#facc15,#eab308);
+      color:#000;
+      transition:.3s;
+    }
+
+    .task button:hover{
+      transform:scale(1.03);
+    }
+
+    .task button.pending{
+      background:#334155;
+      color:#cbd5f5;
+      cursor:not-allowed;
+    }
+
+    .footer{
+      margin-top:20px;
+      text-align:center;
+      font-size:12px;
+      color:#64748b;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="top">
+    <h2>Earn Coins</h2>
+    <p>Complete simple tasks • Get approved • Earn rewards</p>
+  </div>
+
+  <!-- TASK 1 -->
+  <div class="task">
+    <span>+5 🪙</span>
+    <h4>👍 Support a Facebook Page</h4>
+    <p>Like the page to help creators grow.</p>
+    <a href="https://facebook.com" target="_blank">Open Facebook</a>
+    <button onclick="submitTask('fb_like',this)">Submit for Review</button>
+  </div>
+
+  <!-- TASK 2 -->
+  <div class="task">
+    <span>+3 🪙</span>
+    <h4>📢 Join Telegram Channel</h4>
+    <p>Join our official updates channel.</p>
+    <a href="https://t.me/hirdoytech" target="_blank">Join Telegram</a>
+    <button onclick="submitTask('tg_join',this)">Submit for Review</button>
+  </div>
+
+  <div class="footer">
+    Tasks are reviewed manually • Status: Pending ⏳
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD5pHFDyLgn1Gd2h0MdGMfLv9VM_kQ3bsw",
+    authDomain: "taskcoin-2be79.firebaseapp.com",
+    projectId: "taskcoin-2be79",
+    appId: "1:103144012500:web:c6a01af9fac3af107b5941"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let user = null;
+
+  onAuthStateChanged(auth, u=>{
+    if(!u){
+      location.href="index.html";
+    }else{
+      user=u;
+    }
+  });
+
+  window.submitTask = async function(taskId,btn){
+    if(!user) return;
+
+    const q=query(
+      collection(db,"taskRequests"),
+      where("userId","==",user.uid),
+      where("taskId","==",taskId)
+    );
+
+    const snap=await getDocs(q);
+    if(!snap.empty){
+      alert("Already submitted ⏳");
+      return;
+    }
+
+    await addDoc(collection(db,"taskRequests"),{
+      userId:user.uid,
+      userEmail:user.email,
+      taskId:taskId,
+      status:"pending",
+      createdAt:new Date()
+    });
+
+    btn.innerText="Pending Review ⏳";
+    btn.classList.add("pending");
+    btn.disabled=true;
+  }
+</script>
+
+</body>
+</html>
