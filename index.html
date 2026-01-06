@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TaskCoin - Login</title>
+</head>
+<body>
+
+  <h2>TaskCoin Login</h2>
+
+  <input type="email" id="email" placeholder="Email"><br><br>
+  <input type="password" id="password" placeholder="Password"><br><br>
+
+  <button onclick="signup()">Sign Up</button>
+  <button onclick="login()">Login</button>
+
+  <br><br>
+  <button onclick="loginGoogle()">Login with Google</button>
+
+  <p id="msg"></p>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "PASTE_API_KEY",
+      authDomain: "PASTE_AUTH_DOMAIN",
+      projectId: "PASTE_PROJECT_ID",
+      appId: "PASTE_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function signup() {
+      auth.createUserWithEmailAndPassword(email.value, password.value)
+        .then(() => msg.innerText = "Signup successful")
+        .catch(e => msg.innerText = e.message);
+    }
+
+    function login() {
+      auth.signInWithEmailAndPassword(email.value, password.value)
+        .then(() => msg.innerText = "Login successful")
+        .catch(e => msg.innerText = e.message);
+    }
+
+    function loginGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(() => msg.innerText = "Google login successful")
+        .catch(e => msg.innerText = e.message);
+    }
+  </script>
+
+</body>
+</html>
