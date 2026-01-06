@@ -1,33 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>TaskCoin Login</title>
+  <title>TaskCoin Dashboard</title>
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+    }
+
+    .card {
+      width: 320px;
+      background: #0f172a;
+      padding: 25px;
+      border-radius: 18px;
+      box-shadow: 0 25px 45px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 5px;
+      color: #38bdf8;
+    }
+
+    .email {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    .coin-box {
+      background: linear-gradient(135deg, #facc15, #eab308);
+      color: #000;
+      padding: 18px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>TaskCoin Login</h2>
+<div class="card">
+  <h2>TaskCoin</h2>
+  <div class="email" id="email">Loading...</div>
 
-<input type="email" id="email" placeholder="Email"><br><br>
-<input type="password" id="password" placeholder="Password"><br><br>
+  <div class="coin-box">
+    🪙 <span id="coins">0</span> Coins
+  </div>
 
-<button onclick="signup()">Sign Up</button>
-<button onclick="login()">Login</button>
-<br><br>
-<button onclick="googleLogin()">Login with Google</button>
+  <button onclick="logout()">Logout</button>
+</div>
 
-<p id="msg"></p>
-
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD5pHFDyLgn1Gd2h0MdGMfLv9VM_kQ3bsw",
     authDomain: "taskcoin-2be79.firebaseapp.com",
     projectId: "taskcoin-2be79",
-    storageBucket: "taskcoin-2be79.appspot.com",
-    messagingSenderId: "103144012500",
     appId: "1:103144012500:web:c6a01af9fac3af107b5941"
   };
 
@@ -35,62 +93,23 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  window.signup = async () => {
-    const email = email.value;
-    const password = password.value;
-
-    try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCred.user.uid;
-
-      await setDoc(doc(db, "users", uid), {
-        email: email,
-        coins: 10,
-        createdAt: new Date()
-      });
-
-      msg.innerText = "Signup successful! 10 coins added 🎉";
-    } catch (e) {
-      msg.innerText = e.message;
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "index.html";
+      return;
     }
-  };
 
-  window.login = async () => {
-    const email = email.value;
-    const password = password.value;
+    document.getElementById("email").innerText = user.email;
 
-    try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      const uid = userCred.user.uid;
+    const snap = await getDoc(doc(db, "users", user.uid));
+    document.getElementById("coins").innerText =
+      snap.exists() ? snap.data().coins : 0;
+  });
 
-      const snap = await getDoc(doc(db, "users", uid));
-      msg.innerText = "Login success! Coins: " + snap.data().coins;
-    } catch (e) {
-      msg.innerText = e.message;
-    }
-  };
-
-  window.googleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const userCred = await signInWithPopup(auth, provider);
-      const uid = userCred.user.uid;
-
-      const ref = doc(db, "users", uid);
-      const snap = await getDoc(ref);
-
-      if (!snap.exists()) {
-        await setDoc(ref, {
-          email: userCred.user.email,
-          coins: 10,
-          createdAt: new Date()
-        });
-      }
-
-      msg.innerText = "Google login success! 🎉";
-    } catch (e) {
-      msg.innerText = e.message;
-    }
+  window.logout = function () {
+    signOut(auth).then(() => {
+      window.location.href = "index.html";
+    });
   };
 </script>
 
