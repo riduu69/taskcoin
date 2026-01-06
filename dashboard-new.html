@@ -106,13 +106,15 @@
         window.open(t.link, "_blank");
 
         // ⏳ Pending task save
-        await addDoc(collection(db, "pendingTasks"), {
-          taskId: doc.id,
-          reward: t.reward,
-          status: "pending",
-          createdAt: Date.now()
-        });
+        const userId = localStorage.getItem("userId");
 
+await addDoc(collection(db, "pendingTasks"), {
+  userId: userId,
+  taskId: doc.id,
+  reward: t.reward,
+  status: "pending",
+  createdAt: Date.now()
+});
         alert("Task submitted. Waiting for admin approval.");
       };
 
