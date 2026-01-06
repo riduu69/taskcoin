@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TaskCoin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="font-family:Arial; text-align:center; margin-top:60px;">
+
+  <h2>Welcome to TaskCoin</h2>
+  <p id="email"></p>
+  <h3>🪙 Coins: <span id="coins">0</span></h3>
+
+  <br>
+  <button onclick="logout()">Logout</button>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD5pHFDyLgn1Gd2h0MdGMfLv9VM_kQ3bsw",
+      authDomain: "taskcoin-2be79.firebaseapp.com",
+      projectId: "taskcoin-2be79",
+      appId: "1:103144012500:web:c6a01af9fac3af107b5941"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "index.html";
+      } else {
+        email.innerText = "Email: " + user.email;
+        db.collection("users").doc(user.uid).get().then(doc => {
+          coins.innerText = doc.data().coins;
+        });
+      }
+    });
+
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    }
+  </script>
+
+</body>
+</html>
