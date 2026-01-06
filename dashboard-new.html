@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TaskCoin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    body { font-family: Arial; background:#f4f6f8; margin:0; }
+    .header { background:#111; color:#fff; padding:15px; text-align:center; }
+    .task { background:#fff; margin:15px; padding:15px; border-radius:8px; }
+    button {
+      background:#000;
+      color:#fff;
+      border:none;
+      padding:8px 14px;
+      border-radius:5px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">TaskCoin – Earn Coins</div>
+<div id="tasks"></div>
+
+<script>
+  // 🔹 Firebase config আগের মতোই থাকবে
+  firebase.initializeApp(firebaseConfig);
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "index.html";
+    } else {
+      loadTasks(user.uid);
+    }
+  });
+
+  function loadTasks(userId) {
+    db.collection("tasks")
+      .where("status", "==", "active")
+      .get()
+      .then(snapshot => {
+        const box = document.getElementById("tasks");
+        box.innerHTML = "";
+
+        snapshot.forEach(doc => {
+          const t = doc.data();
+          box.innerHTML += `
+            <div class="task">
+              <h3>${t.title}</h3>
+              <p>Reward: ${t.reward} coins</p>
+              <button onclick="submitTask('${doc.id}', ${t.reward})">
+                Complete Task
+              </button>
+            </div>
+          `;
+        });
+      });
+  }
+
+  function submitTask(taskId, reward) {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    db.collection("pendingTasks").add({
+      userId: user.uid,
+      taskId: taskId,
+      reward: reward,
+      status: "pending",
+      time: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      alert("Task submitted! Waiting for admin approval.");
+    });
+  }
+</script>
+
+</body>
+</html>
